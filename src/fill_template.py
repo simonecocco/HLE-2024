@@ -74,11 +74,12 @@ if __name__ == '__main__':
     # Filtro per quelle "invalide"
     relations = list(
         filter(
-            lambda rel: rel is not None,
-            [explode_relation(relation) for relation in relations]
+            lambda rel: rel[0] is not None,
+            [(explode_relation(relation), relation.strip()) for relation in relations]
         )
     )[:args.max_relations]
     
-    finals = [replace_in_template(choice(template_rows), rel)for rel in relations]
+    finals = [(replace_in_template(choice(template_rows), rel[0]), rel[1]) for rel in relations]
     with open(args.output, 'w') as f:
-        f.writelines(finals)
+        for line in finals:
+            f.write(f'{line[1].strip()}\t{line[0].strip()[1:-1]}\n')
