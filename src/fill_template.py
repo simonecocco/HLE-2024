@@ -45,23 +45,24 @@ def replace_in_template(template_row, relation):
     text = list(template_row[0])
     tags = template_row[1]
     for tag in tags:
-        text[tag[1]] = f'<start_{TAGS[tag[0]]}>{relation[tag[0]]}<end_{TAGS[tag[0]]}>'
+        text[tag[1]] = f'<start_{TAGS[tag[0]]}> {relation[tag[0]]} <end_{TAGS[tag[0]]}>'
         text[tag[1]+1:tag[2]] = [''] * (tag[2] - tag[1] - 1)
         
     return ''.join(text)
 
 def get_type_of_entity(entity):
-    pass # TODO
+    # bisogna guardare il pid su mapping di ml1m o lfm1m
+    # in caso di U è user
+    return 'USER' if entity[0] == 'U' else 'ENTITY' # TODO
 
 def explode_relation(relation_text):
-    relation_text = relation_text.strip().split(' ')
     return {
         '<pi>': relation_text[2],
         '<rp>': relation_text[-1],
         '<shared entity>': relation_text[-3],
-        '<type of entity>': 'ENTITY_TYPE',# TODO
+        '<type of entity>': get_type_of_entity(relation_text[-3]),
         '<relation>': relation_text[-2]
-    } if relation_text[-3][0] == 'E' else None
+    }
 
 if __name__ == '__main__':
     parser = create_argparse()
@@ -71,15 +72,9 @@ if __name__ == '__main__':
     template_rows = preprocess_template(template_rows)
 
     relations = read_relations(args.relations)
-    # Filtro per quelle "invalide"
-    relations = list(
-        filter(
-            lambda rel: rel[0] is not None,
-            [(explode_relation(relation), relation.strip()) for relation in relations]
-        )
-    )[:args.max_relations]
-    
+    relations = [(explode_relation(expl := relation.strip().split(' ')), ' '.join(expl[:2]+[expl[-1]])) for relation in relations][:args.max_relations]
+
     finals = [(replace_in_template(choice(template_rows), rel[0]), rel[1]) for rel in relations]
     with open(args.output, 'w') as f:
         for line in finals:
-            f.write(f'{line[1].strip()}\t{line[0].strip()[1:-1]}\n')
+            f.write(f'<start_rec> {line[1].strip()} <end_rec> <start_exp> {line[0].strip()[1:-1]} <end_exp>\n')
