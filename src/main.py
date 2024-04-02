@@ -20,7 +20,8 @@ def read_filled_template(path):
         'output': [line[1].strip() for line in lines]
     })
 
-
+# pathlm/models/lm/tokenize_dataset.py
+# cambiare TOKENIZER_TYPE = "WordLevel" -> 'BPE'
 class DistilGPT2:
     def __init__(self):
         tokenizer = AutoTokenizer.from_pretrained("distilgpt2")
