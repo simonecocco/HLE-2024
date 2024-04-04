@@ -7,9 +7,19 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, DataCollatorForPad
 from argparse import ArgumentParser
 from datasets import Dataset
 
-def configure_argparse():
+def configure_argparse() -> ArgumentParser:
+    """
+    Configure the ArgumentParser object for command line argument parsing.
+
+    Returns:
+        aparse (ArgumentParser): The configured ArgumentParser object.
+    """
     aparse = ArgumentParser()
-    aparse.add_argument('-f', '--file', type=str, required=True, help='Path to the file')
+    aparse.add_argument('action', type=str, required=True, help='Action to perform {tokenize, train, generate}')
+    aparse.add_argument('-T', '--template-file', type=str, help='Path to the filled template file')
+    aparse.add_argument('-c', '--checkpoint-path', type=str, help='Path to save/load checkpoints')
+    aparse.add_argument('-t', '--tokenizer-file', type=str, help='Path to save/load tokenizer')
+    aparse.add_argument('-e', '--eval', type=str, help='String to pass to evaluate the model')
     return aparse
 
 def read_filled_template(path):
