@@ -5,7 +5,7 @@
 
 from argparse import ArgumentParser
 from datasets import Dataset
-from utils.tokenize import *
+from utils import *
 
 def configure_argparse() -> ArgumentParser:
     """
@@ -22,7 +22,7 @@ def configure_argparse() -> ArgumentParser:
     aparse.add_argument('-e', '--eval', type=str, help='String to pass to evaluate the model')
     return aparse
 
-def read_filled_template(path): #TODO
+def read_filled_template(path):
     with open(path) as f:
         return f.read().strip()
 
@@ -36,6 +36,10 @@ def tokenize(text_path, tok_path):
     print(f'Saving tokenizer to {tok_path}')
     tokenizer.save_pretrained(tok_path)
     
+def train_model():
+    model = load_distilgpt2_model()
+    data_collator, text_dataset = create_text_dataset()
+    
 
 if __name__ == '__main__':
     args = configure_argparse().parse_args()
@@ -44,7 +48,8 @@ if __name__ == '__main__':
         print('Starting tokenizing action')
         tokenize(args.template_path, args.tok_path)
     elif action == 'train':
-        print('not implemented yet')
+        print('Training model')
+
     elif action == 'generate':
         print('not implemented yet')
     else:
