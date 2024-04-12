@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 import re
 from random import choice
+from utils import *
 
 TAGS = {
     '<pi>': 'pi',
@@ -9,24 +10,6 @@ TAGS = {
     '<type of entity>': 'te',
     '<relation>': 're'
 }
-
-def create_argparse() -> ArgumentParser:
-    """
-    Create an ArgumentParser object with the required arguments.
-
-    Returns:
-        argparse.ArgumentParser: The ArgumentParser object with the defined arguments.
-    """
-    aparse = ArgumentParser()
-    aparse.add_argument('--template', '-T', type=str, required=True,
-                        help='Path to the template file')
-    aparse.add_argument('--relations', '-R', type=str, required=True,
-                        help='Path to the relations file')
-    aparse.add_argument('--output', '-O', type=str, default='output.txt',
-                        help='Path to the output file')
-    aparse.add_argument('--max-relations', '-L', type=int, default=100,
-                        help='Maximum number of relations to consider')
-    return aparse
 
 def read_template(path) -> list:
     """
@@ -145,16 +128,29 @@ def explode_relation(relation_text):
     }
 
 if __name__ == '__main__':
-    parser = create_argparse()
-    args = parser.parse_args()
+    aparse = ArgumentParser()
+    aparse.add_argument('--template_file', '-T', type=str, dest='template', required=True,
+                        help='Path to the template file')
+    aparse.add_argument('--raw_paths_file_name', '-R', type=str, required=True,
+                        help='Path to the relations file')
+    aparse.add_argument('--output_file_name', '-O', type=str, default='filled_templates.txt',
+                        help='Path to the output file')
+    aparse.add_argument('--dataset-name', '-d', type=str, default='ml1m',
+                        help='Name of the dataset')
+    aparse.add_argument('--max-relations', '-L', type=int, default=100,
+                        help='Maximum number of relations to consider')
+    args = aparse.parse_args()
+    data_dir = get_data_dir(args.dataset_name)
+    template_dir = get_template_dir()
     
-    template_rows = read_template(args.template)
+    template_rows = read_template(join(template_dir, args.template))
     template_rows = preprocess_template(template_rows)
 
-    relations = read_relations(args.relations)
+    raw_paths_dir = get_raw_paths_dir(args.dataset_name)
+    relations = read_relations(join(raw_paths_dir, args.raw_paths_file_name))
     relations = [(explode_relation(expl := relation.strip().split(' ')), ' '.join(expl[:2]+[expl[-1]])) for relation in relations][:args.max_relations]
 
     finals = [(replace_in_template(choice(template_rows), rel[0]), rel[1]) for rel in relations]
-    with open(args.output, 'w') as f:
+    with open(join(get_filled_templates_path(), args.output_file_name), 'w') as f:
         for line in finals:
             f.write(f'<start_rec> {line[1].strip()} <end_rec> <start_exp> {line[0].strip()[1:-1]} <end_exp>\n')
